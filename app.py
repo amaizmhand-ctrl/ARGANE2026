@@ -31,7 +31,7 @@ def get_supabase():
     return None
 
 # ---------------------------------------------------------
-# Page Configuration & Clean High-Contrast CSS Styling
+# Page Configuration & Full Dark Mode CSS Styling
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="Lqargane - منظومة تتبع الغياب الذكية",
@@ -44,46 +44,81 @@ st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap');
     
-    html, body, [class*="css"], div, span, h1, h2, h3, h4, h5, h6, p, label, input, textarea, select {
+    /* 1. ضبط الخلفية العامة للموقع بالكامل للأزرق الغامق المريح للعين */
+    html, body, .stApp {
+        background-color: #0b132b !important;
         font-family: 'Tajawal', sans-serif !important;
         direction: rtl;
         text-align: right;
-        color: #0f172a !important; /* لون داكن وواضح جداً لجميع النصوص */
+        color: #f8fafc !important;
     }
     
-    .stApp {
-        background-color: #f8fafc !important;
+    /* 2. ضبط الألوان العامة للنصوص والعناوين */
+    h1, h2, h3, h4, h5, h6 {
+        color: #38bdf8 !important; /* لون سماوي مضيء للعناوين */
+        font-weight: 800 !important;
+    }
+    
+    p, span, label, div, li, td, th {
+        color: #f1f5f9 !important; /* أبيض ناصع للنصوص العادية */
+    }
+    
+    /* 3. توهج أصفر بارز للتنبيهات والأوصاف */
+    .highlight-yellow {
+        color: #facc15 !important;
+        font-weight: 700;
     }
 
-    /* تحسين وضوح الحقول الإدخالية والنصوص داخلها */
-    input, select, textarea {
-        background-color: #ffffff !important;
-        color: #0f172a !important;
-        border: 1px solid #cbd5e1 !important;
+    /* 4. تصميم جميع خانات الإدخال بخلفية داكنة ونصوص بيضاء جليّة */
+    input, select, textarea, div[data-baseweb="input"], div[data-baseweb="select"] {
+        background-color: #1c2541 !important;
+        color: #ffffff !important;
+        border: 1px solid #3a506b !important;
         border-radius: 8px !important;
     }
+    
+    input:focus, textarea:focus {
+        border-color: #38bdf8 !important;
+        box-shadow: 0 0 8px rgba(56, 189, 248, 0.4) !important;
+    }
 
-    /* الأزرار بشكل بارز وواضح */
+    /* 5. تصميم الأزرار باللون الأزرق الملكي البارز */
     .stButton>button {
         border-radius: 10px;
         font-weight: 700;
-        background-color: #0284c7 !important;
-        color: white !important;
-        border: none;
+        background: linear-gradient(135deg, #0284c7, #0369a1) !important;
+        color: #ffffff !important;
+        border: 1px solid #38bdf8 !important;
+        box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+        transition: all 0.2s ease;
     }
     
     .stButton>button:hover {
-        background-color: #0369a1 !important;
-        color: white !important;
+        background: linear-gradient(135deg, #0369a1, #075985) !important;
+        color: #facc15 !important; /* تغيير لون النص للأصفر عند التمرير */
+        transform: translateY(-2px);
     }
 
-    /* تنسيق الشريط الجانبي */
+    /* 6. الشريط الجانبي بتدرج داكن فخم */
     section[data-testid="stSidebar"] {
-        background-color: #0f172a !important;
+        background-color: #0b132b !important;
+        border-left: 1px solid #1c2541 !important;
     }
     
     section[data-testid="stSidebar"] * {
         color: #f8fafc !important;
+    }
+
+    /* 7. الجداول وإصلاح لون خلفيتها لتطابق الطابع الداكن */
+    div[data-aria-label="Grid"] {
+        background-color: #1c2541 !important;
+        color: #ffffff !important;
+    }
+    
+    .stDataFrame {
+        background-color: #1c2541 !important;
+        border-radius: 10px;
+        border: 1px solid #3a506b;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -166,27 +201,6 @@ def init_db():
     ''')
 
     c.execute('''
-        CREATE TABLE IF NOT EXISTS entry_permits (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            student_id INTEGER,
-            cleared_by TEXT,
-            timestamp TEXT
-        )
-    ''')
-
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS school_exclusions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            target_type TEXT,
-            target_name TEXT,
-            start_date TEXT,
-            end_date TEXT,
-            reason TEXT,
-            created_by TEXT
-        )
-    ''')
-
-    c.execute('''
         CREATE TABLE IF NOT EXISTS staff_chats (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             sender_name TEXT,
@@ -219,7 +233,6 @@ def init_db():
         )
     ''')
 
-    # حساب المطور الرئيسي (يستخدم البريد الشخصي لإرسال الكود فقط ولا يظهر للآخرين)
     dev_pass = st.secrets.get("DEV_PASSWORD", "dev1234")
     dev_email = st.secrets.get("DEV_EMAIL", "amaizmhand@gmail.com")
     
@@ -297,7 +310,7 @@ def logout():
 # ---------------------------------------------------------
 with st.sidebar:
     st.markdown("<h2 style='text-align: center; color: #38bdf8;'>🏫 Lqargane</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #cbd5e1; font-size: 0.85rem;'>منصة المواظبة والزمن المدرسي الذكي</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #facc15; font-size: 0.85rem;'>منصة المواظبة والزمن المدرسي الذكي</p>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; color: #38bdf8; font-size: 0.8rem; font-weight: bold;'>By: Pr:M'h.AMAIZ</p>", unsafe_allow_html=True)
     st.divider()
 
@@ -305,7 +318,7 @@ with st.sidebar:
         u = st.session_state.user
         role_label = u.get('custom_title', u['role'])
 
-        st.markdown(f"**مرحباً بك:** {u['full_name']}")
+        st.markdown(f"**مرحباً بك:** <span class='highlight-yellow'>{u['full_name']}</span>", unsafe_allow_html=True)
         st.markdown(f"**الصفة التربوية:** `{role_label}`")
 
         st.divider()
@@ -314,7 +327,7 @@ with st.sidebar:
             
     elif st.session_state.pending_2fa_user:
         st.subheader("🛡️ المصادقة الثنائية (2FA)")
-        st.info("أدخل كود التحقق السري المكون من 6 أرقام (يصلك بالبريد أو يظهر كإشعار في الشاشة):")
+        st.info("أدخل كود التحقق السري المكون من 6 أرقام (يصلك بالبريد أو يظهر في الشاشة):")
         
         entered_otp = st.text_input("كود التحقق:", type="password", max_chars=6)
         
@@ -340,7 +353,7 @@ with st.sidebar:
 
         if auth_mode == "🔐 دخول الأطر (مع 2FA الآمن)":
             st.subheader("دخول الأطر التربوية الآمن")
-            login_id = st.text_input("معرف المطور أو الهاتف أو البريد", placeholder="dev_admin أو الهاتف", key="login_id_field")
+            login_id = st.text_input("المعرف أو الهاتف أو البريد المهني", key="login_id_field")
             login_pass = st.text_input("كلمة المرور / الكود", type="password", key="login_pass_field")
             
             if st.button("إرسال كود المصادقة الثنائية", use_container_width=True, type="primary"):
@@ -389,28 +402,43 @@ with st.sidebar:
                     st.error("يرجى ملء كافة الخانات.")
 
 # ---------------------------------------------------------
+# Flash Announcements Banner for Parents
+# ---------------------------------------------------------
+if st.session_state.user:
+    conn = get_db_connection()
+    today_str = date.today().strftime("%Y-%m-%d")
+    announcements = pd.read_sql_query("SELECT title, message, publisher FROM flash_announcements WHERE expiry_date >= ?", conn, params=(today_str,))
+    conn.close()
+
+    if not announcements.empty and st.session_state.user['role'] == 'parent':
+        st.markdown("### 📢 إخبارات عاجلة وتنبيهات المؤسسة:")
+        for _, ann in announcements.iterrows():
+            st.warning(f"🚨 **{ann['title']}** (ناشر الخبر: {ann['publisher']})\n\n{ann['message']}")
+
+# ---------------------------------------------------------
 # Main Router
 # ---------------------------------------------------------
 if not st.session_state.user:
     st.markdown("""
-        <div style="text-align: center; padding: 2.5rem; background: linear-gradient(135deg, #0f172a, #1e293b); border-radius: 16px; color: white; margin-bottom: 2rem;">
+        <div style="text-align: center; padding: 2.5rem; background: linear-gradient(135deg, #1c2541, #0b132b); border: 1px solid #3a506b; border-radius: 16px; color: white; margin-bottom: 2rem;">
             <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem; color: #38bdf8;">🏫 منصة Lqargane الذكية لتتبع الغياب</h1>
-            <p style="font-size: 1.2rem; color: #cbd5e1;">موقع وتطبيق رسمي متزامن لحظياً لإدارة الزمن المدرسي ومتابعة المواظبة والسلوك</p>
+            <p style="font-size: 1.2rem; color: #facc15;">موقع وتطبيق رسمي متزامن لحظياً لإدارة الزمن المدرسي ومتابعة المواظبة والسلوك</p>
             <p style="font-size: 1rem; color: #38bdf8; margin-top: 1rem; font-weight: bold;">Developed by: Pr:M'h.AMAIZ</p>
         </div>
     """, unsafe_allow_html=True)
-    st.info("👈 يرجى تسجيل الدخول عبر الشريط الجانبي (استخدم `dev_admin` وكلمة المرور الخاصة بك).")
+    st.info("👈 يرجى تسجيل الدخول عبر الشريط الجانبي لتفعيل الحماية والولوج.")
 
 else:
     role = st.session_state.user['role']
 
+    # 1. DEVELOPER ROLE
     if role == 'developer':
         st.title("👨‍💻 لوحة تحكّم المطور الرئيسي (Lqargane Master)")
         dev_tabs = st.tabs(["👤 حسابات الأطر", "📥 استيراد الإكسيل", "📅 استعمال الزمن", "➕ الأقسام", "🔑 تغيير كلمة السر"])
 
         conn = get_db_connection()
         with dev_tabs[0]:
-            st.subheader("إضافة حساب أستاذ أو إداري")
+            st.subheader("إضافة حساب أستاذ أو إداري مع البريد لتلقي 2FA")
             d_name = st.text_input("الاسم الكامل")
             d_email = st.text_input("البريد الإلكتروني المهني")
             d_phone = st.text_input("رقم الهاتف", placeholder="06XXXXXXXX")
@@ -425,7 +453,7 @@ else:
                         c.execute("INSERT INTO users (username, password, full_name, role, custom_title, status, phone, email, must_change_password) VALUES (?, ?, ?, ?, ?, 'active', ?, ?, 1)",
                                   (d_email, d_pass, d_name, d_role, d_custom_title, d_phone, d_email))
                         conn.commit()
-                        st.success("تم الحفظ بنجاح!")
+                        st.success("تم الحفظ بنجاح وتفعيل الحساب!")
                     except Exception as e:
                         st.error(f"خطأ: {e}")
                 else:
@@ -437,6 +465,7 @@ else:
             if up_file:
                 try:
                     xls = pd.ExcelFile(up_file)
+                    st.write(f"📁 تم العثور على {len(xls.sheet_names)} قسم/مجموعة في الملف.")
                     if st.button("معالجة واستيراد كافة أقسام ومجموعات التلاميذ"):
                         c = conn.cursor()
                         total_imported = 0
@@ -476,9 +505,9 @@ else:
                                         """, (std_num, massar, full_name, class_val, secret_code))
                                         total_imported += 1
                         conn.commit()
-                        st.success(f"🎉 تم بنجاح استيراد وتسجيل {total_imported} تلميذاً!")
+                        st.success(f"🎉 تم بنجاح استيراد وتسجيل {total_imported} تلميذاً عبر الأقسام والمستويات!")
                 except Exception as e:
-                    st.error(f"خطأ: {e}")
+                    st.error(f"خطأ أثناء القراءة: {e}")
 
         with dev_tabs[2]:
             st.subheader("إدخال استعمال الزمن")
@@ -514,15 +543,107 @@ else:
                     st.error("كلمتا المرور غير متطابقتين أو فارغتان.")
         conn.close()
 
+    # 2. ADMINISTRATION & SUPERVISOR ROLE
     elif role in ['admin', 'supervisor']:
         st.title(f"📋 لوحة قيادة {'السيد المدير' if role == 'admin' else 'الحارس العام'}")
-        st.info("لوحة القيادة الإدارية جاهزة.")
+        admin_tabs = st.tabs(["📊 الإحصائيات والبحث", "🚨 تنبيهات الغياب", "💬 دردشة الأطر", "📢 الإخبارات", "📥 التقارير الرسمية"])
+        conn = get_db_connection()
+        
+        with admin_tabs[0]:
+            st.subheader("البحث الفردي للتلاميذ")
+            srch_name = st.text_input("اسم التلميذ:")
+            if st.button("بحث"):
+                res = pd.read_sql_query("SELECT * FROM students WHERE full_name LIKE ?", conn, params=(f"%{srch_name}%",))
+                st.dataframe(res, use_container_width=True)
+                
+        with admin_tabs[1]:
+            st.subheader("تلاميذ تجاوزوا عتبة 4 ساعات غياب")
+            absent_risk = pd.read_sql_query("SELECT * FROM students WHERE total_absent_hours >= 4", conn)
+            st.dataframe(absent_risk, use_container_width=True)
+            if not absent_risk.empty:
+                st.divider()
+                target_sid = st.selectbox("اختر التلميذ لإرسال تنبيه إداري ثابت:", absent_risk['id'].tolist(), format_func=lambda x: absent_risk[absent_risk['id']==x]['full_name'].values[0])
+                notice_text = st.text_area("نص التنبيه الإداري:")
+                if st.button("إرسال التنبيه الثابت"):
+                    if notice_text:
+                        c = conn.cursor()
+                        c.execute("INSERT INTO student_disciplinary_records (student_id, issuer_title, notice_type, content, created_at) VALUES (?, ?, 'تنبيه إداري تجاوز السقف', ?, ?)",
+                                  (target_sid, st.session_state.user['custom_title'], notice_text, datetime.now().strftime("%Y-%m-%d %H:%M")))
+                        conn.commit()
+                        st.success("تم إرسال التنبيه الثابت بنجاح.")
+                        
+        with admin_tabs[2]:
+            st.subheader("غرفة دردشة الأطر الخاصة")
+            msg_input = st.text_input("اكتب رسالة:")
+            if st.button("إرسال رسالة"):
+                if msg_input:
+                    c = conn.cursor()
+                    c.execute("INSERT INTO staff_chats (sender_name, sender_title, message, timestamp) VALUES (?, ?, ?, ?)",
+                              (st.session_state.user['full_name'], st.session_state.user['custom_title'], msg_input, datetime.now().strftime("%Y-%m-%d %H:%M")))
+                    conn.commit()
+            chats = pd.read_sql_query("SELECT sender_title, message, timestamp FROM staff_chats ORDER BY id DESC LIMIT 10", conn)
+            for _, ch in chats.iterrows():
+                st.markdown(f"💬 **{ch['sender_title']}** ({ch['timestamp']}): {ch['message']}")
+                
+        with admin_tabs[3]:
+            st.subheader("نشر إخبار عاجل للأولياء")
+            title = st.text_input("العنوان")
+            msg = st.text_area("الرسالة")
+            if st.button("نشر فوري"):
+                c = conn.cursor()
+                c.execute("INSERT INTO flash_announcements (title, message, expiry_date, publisher) VALUES (?, ?, ?, ?)", (title, msg, str(date.today() + timedelta(days=2)), st.session_state.user['custom_title']))
+                conn.commit()
+                st.success("تم النشر بنجاح.")
+                
+        with admin_tabs[4]:
+            st.subheader("تصدير التقارير الرسمية")
+            df_rep = pd.read_sql_query("SELECT * FROM students", conn)
+            st.dataframe(df_rep)
+            st.download_button("⬇️ تحميل كملف CSV", data=df_rep.to_csv(index=False).encode('utf-8'), file_name="students_report.csv", mime="text/csv")
+        conn.close()
 
+    # 3. TEACHER ROLE
     elif role == 'teacher':
         st.title(f"👨‍🏫 بوابة الأستاذ(ة): {st.session_state.user['full_name']}")
-        st.info("بوابة الأستاذ جاهزة.")
+        conn = get_db_connection()
+        t_classes = pd.read_sql_query("SELECT DISTINCT class_name FROM teacher_timetable WHERE teacher_username = ?", conn, params=(st.session_state.user['username'],))['class_name'].tolist()
+        if not t_classes: t_classes = ["الجذع المشترك 1"]
+        
+        sel_cls = st.selectbox("القسم أو المجموعة:", t_classes)
+        sess_num = st.selectbox("الحصة:", options=list(SESSIONS.keys()), format_func=lambda x: f"الحصة {x} ({SESSIONS[x]['time']})")
+        
+        std_df = pd.read_sql_query("SELECT id, student_number, full_name FROM students WHERE class_name = ?", conn, params=(sel_cls,))
+        absent_ids = []
+        for _, r in std_df.iterrows():
+            if st.checkbox(f"({r['student_number']}) {r['full_name']}", key=f"t_abs_{r['id']}"):
+                absent_ids.append(r['id'])
+                
+        custom_note = st.text_input("ملاحظة سلوكية للأستاذ (تثبت فوراً في سجل التلميذ ولا يمكن حذفها):")
+        if st.button("حفظ الغياب والملاحظة الثابتة", type="primary"):
+            c = conn.cursor()
+            for sid in absent_ids:
+                c.execute("INSERT INTO absence_records (student_id, class_name, date, session_number, session_time, recorded_by, note) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                          (sid, sel_cls, str(date.today()), sess_num, SESSIONS[sess_num]['time'], st.session_state.user['custom_title'], custom_note))
+                c.execute("UPDATE students SET total_absent_hours = total_absent_hours + 1 WHERE id = ?", (sid,))
+            if custom_note and absent_ids:
+                c.execute("INSERT INTO student_disciplinary_records (student_id, issuer_title, notice_type, content, created_at) VALUES (?, ?, 'ملاحظة سلوكية للأستاذ', ?, ?)",
+                          (absent_ids[0], st.session_state.user['custom_title'], custom_note, datetime.now().strftime("%Y-%m-%d %H:%M")))
+            conn.commit()
+            st.success("تم الحفظ وتثبيت الملاحظة في سوابق التلميذ بنجاح!")
+        conn.close()
 
+    # 4. PARENT & STUDENT ROLE
     elif role == 'parent':
         std = st.session_state.active_parent_student
         st.title(f"👁️ فضاء مراقبة المواظبة: {std['full_name']}")
+        conn = get_db_connection()
         st.metric("مجموع ساعات الغياب", f"{std['total_absent_hours']} ساعة")
+        
+        st.subheader("🚨 السجل الثابت للملاحظات والتنبيهات الإدارية والسلوكية:")
+        notices = pd.read_sql_query("SELECT issuer_title as 'المرسل', notice_type as 'نوع الإشعار', content as 'التفاصيل', created_at as 'التاريخ' FROM student_disciplinary_records WHERE student_id = ?", conn, params=(std['id'],))
+        if not notices.empty:
+            st.warning("⚠️ ملاحظة: هذه السجلات موثقة رسمياً ولا يمكن التلاعب بها أو حذفها.")
+            st.dataframe(notices, use_container_width=True)
+        else:
+            st.success("سجلك نظيف تماماً وخالٍ من أي ملاحظات!")
+        conn.close()
