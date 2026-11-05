@@ -31,7 +31,7 @@ def get_supabase():
     return None
 
 # ---------------------------------------------------------
-# Page Configuration & Styling
+# Page Configuration & Clean High-Contrast CSS Styling
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="Lqargane - منظومة تتبع الغياب الذكية",
@@ -42,41 +42,42 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap');
     
-    html, body, [class*="css"], div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td {
+    html, body, [class*="css"], div, span, h1, h2, h3, h4, h5, h6, p, label, input, textarea, select {
         font-family: 'Tajawal', sans-serif !important;
         direction: rtl;
         text-align: right;
+        color: #0f172a !important; /* لون داكن وواضح جداً لجميع النصوص */
     }
     
     .stApp {
-        background-color: #f8fafc;
-    }
-    
-    div[style*="background: linear-gradient"], div[style*="background: #0f172a"], div[style*="background: #1e293b"] {
-        color: #ffffff !important;
-    }
-    
-    div[style*="background: linear-gradient"] *, div[style*="background: #0f172a"] *, div[style*="background: #1e293b"] * {
-        color: #ffffff !important;
+        background-color: #f8fafc !important;
     }
 
+    /* تحسين وضوح الحقول الإدخالية والنصوص داخلها */
+    input, select, textarea {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 8px !important;
+    }
+
+    /* الأزرار بشكل بارز وواضح */
     .stButton>button {
         border-radius: 10px;
         font-weight: 700;
-        transition: all 0.2s ease;
-        background-color: #0284c7;
+        background-color: #0284c7 !important;
         color: white !important;
         border: none;
     }
     
     .stButton>button:hover {
-        background-color: #0369a1;
+        background-color: #0369a1 !important;
         color: white !important;
-        transform: translateY(-1px);
     }
 
+    /* تنسيق الشريط الجانبي */
     section[data-testid="stSidebar"] {
         background-color: #0f172a !important;
     }
@@ -218,7 +219,7 @@ def init_db():
         )
     ''')
 
-    # تحديث إيميل المطور الرئيسي ليصبح بريدك الشخصي المعتمد
+    # حساب المطور الرئيسي (يستخدم البريد الشخصي لإرسال الكود فقط ولا يظهر للآخرين)
     dev_pass = st.secrets.get("DEV_PASSWORD", "dev1234")
     dev_email = st.secrets.get("DEV_EMAIL", "amaizmhand@gmail.com")
     
@@ -227,11 +228,10 @@ def init_db():
     if not existing_dev:
         c.execute('''
             INSERT INTO users (username, password, full_name, role, custom_title, status, phone, email)
-            VALUES (?, ?, 'المطور الرئيسي', 'developer', 'مطور النظام', 'active', '0600000000', ?)
-        ''', (dev_email, dev_pass, dev_email))
+            VALUES ('dev_admin', ?, 'المطور الرئيسي', 'developer', 'مطور النظام', 'active', '0600000000', ?)
+        ''', (dev_pass, dev_email))
     else:
-        # تحديث الحساب القديم بالبريد الجديد وضبط صلاحياته
-        c.execute("UPDATE users SET username = ?, email = ?, password = ? WHERE role = 'developer'", (dev_email, dev_email, dev_pass))
+        c.execute("UPDATE users SET username = 'dev_admin', email = ?, password = ? WHERE role = 'developer'", (dev_email, dev_pass))
 
     conn.commit()
     conn.close()
@@ -255,7 +255,6 @@ def send_otp_email(to_email, otp_code):
         sender_password = st.secrets.get("SMTP_PASSWORD", "").replace(" ", "").strip()
         
         if not sender_email or not sender_password:
-            # إذا لم تكن إعدادات البريد مفعلة، عرض الكود مباشرة كإشعار آمن على الشاشة
             st.toast(f"🔐 [كود التحقق 2FA] الكود الخاص بك هو: {otp_code}", icon="🛡️")
             return True
 
@@ -274,9 +273,7 @@ def send_otp_email(to_email, otp_code):
         server.sendmail(sender_email, to_email, text)
         server.quit()
         return True
-    except Exception as e:
-        # نظام الطوارئ الآمن: عرض الكود على الشاشة مباشرة حتى لو تعذر الإرسال البريدي
-        st.error(f"تعذر الإرسال عبر البريد الإلكتروني. تم تفعيل نظام الطوارئ الأمني.")
+    except Exception:
         st.warning(f"🔐 **كود التحقق الثنائي (2FA) الخاص بك هو:** `{otp_code}`")
         return True
 
@@ -296,15 +293,12 @@ def logout():
     st.rerun()
 
 # ---------------------------------------------------------
-# Sidebar Navigation & 2FA Login Flow
+# Sidebar Navigation & Login Flow
 # ---------------------------------------------------------
 with st.sidebar:
     st.markdown("<h2 style='text-align: center; color: #38bdf8;'>🏫 Lqargane</h2>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; color: #cbd5e1; font-size: 0.85rem;'>منصة المواظبة والزمن المدرسي الذكي</p>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; color: #38bdf8; font-size: 0.8rem; font-weight: bold;'>By: Pr:M'h.AMAIZ</p>", unsafe_allow_html=True)
-    
-    supabase_status = "🟢 Supabase سحابي" if get_supabase() else "🟠 SQLite محلي"
-    st.markdown(f"<p style='text-align: center; font-size: 0.75rem; color: #94a3b8;'>حالة البيانات: {supabase_status}</p>", unsafe_allow_html=True)
     st.divider()
 
     if st.session_state.user:
@@ -320,7 +314,7 @@ with st.sidebar:
             
     elif st.session_state.pending_2fa_user:
         st.subheader("🛡️ المصادقة الثنائية (2FA)")
-        st.info("أدخل كود التحقق السري المكون من 6 أرقام (ملاحظة: إذا لم يصلك البريد، تجده معروضاً في أعلى أو وسط الصفحة كإشعار طوارئ):")
+        st.info("أدخل كود التحقق السري المكون من 6 أرقام (يصلك بالبريد أو يظهر كإشعار في الشاشة):")
         
         entered_otp = st.text_input("كود التحقق:", type="password", max_chars=6)
         
@@ -346,14 +340,13 @@ with st.sidebar:
 
         if auth_mode == "🔐 دخول الأطر (مع 2FA الآمن)":
             st.subheader("دخول الأطر التربوية الآمن")
-            # وضع بريدك الإلكتروني الشخصي كقيمة افتراضية لتسهيل الدخول
-            login_id = st.text_input("البريد الإلكتروني أو الهاتف المهني", value="amaizmhand@gmail.com", key="login_id_field")
+            login_id = st.text_input("معرف المطور أو الهاتف أو البريد", placeholder="dev_admin أو الهاتف", key="login_id_field")
             login_pass = st.text_input("كلمة المرور / الكود", type="password", key="login_pass_field")
             
             if st.button("إرسال كود المصادقة الثنائية", use_container_width=True, type="primary"):
                 conn = get_db_connection()
                 c = conn.cursor()
-                c.execute("SELECT * FROM users WHERE (username = ? OR phone = ?) AND password = ?", (login_id, login_id, login_pass))
+                c.execute("SELECT * FROM users WHERE (username = ? OR phone = ? OR email = ?) AND password = ?", (login_id, login_id, login_id, login_pass))
                 user = c.fetchone()
                 conn.close()
 
@@ -363,7 +356,7 @@ with st.sidebar:
                         st.session_state.generated_otp = otp
                         st.session_state.pending_2fa_user = dict(user)
                         
-                        target_mail = user['email'] if user['email'] else "amaizmhand@gmail.com"
+                        target_mail = user['email'] if user['email'] else st.secrets.get("DEV_EMAIL", "amaizmhand@gmail.com")
                         send_otp_email(target_mail, otp)
                         st.success("تم توليد كود التحقق الثنائي بنجاح!")
                         st.rerun()
@@ -406,18 +399,18 @@ if not st.session_state.user:
             <p style="font-size: 1rem; color: #38bdf8; margin-top: 1rem; font-weight: bold;">Developed by: Pr:M'h.AMAIZ</p>
         </div>
     """, unsafe_allow_html=True)
-    st.info("👈 يرجى تسجيل الدخول عبر الشريط الجانبي (بريدك الإلكتروني وكلمة المرور الخاصة بك).")
+    st.info("👈 يرجى تسجيل الدخول عبر الشريط الجانبي (استخدم `dev_admin` وكلمة المرور الخاصة بك).")
 
 else:
     role = st.session_state.user['role']
 
     if role == 'developer':
-        st.title("👨‍💻 لوحة تحكّم المطور الرئيسي (Lqargane Master مع 2FA)")
-        dev_tabs = st.tabs(["👤 حسابات الأطر", "📥 استيراد الإكسيل متعدد الأقسام", "📅 استعمال الزمن", "➕ الأقسام والشعب", "🔑 تغيير كلمة السر الخاصة بالمطور"])
+        st.title("👨‍💻 لوحة تحكّم المطور الرئيسي (Lqargane Master)")
+        dev_tabs = st.tabs(["👤 حسابات الأطر", "📥 استيراد الإكسيل", "📅 استعمال الزمن", "➕ الأقسام", "🔑 تغيير كلمة السر"])
 
         conn = get_db_connection()
         with dev_tabs[0]:
-            st.subheader("إضافة حساب أستاذ أو إداري مع البريد لتلقي 2FA")
+            st.subheader("إضافة حساب أستاذ أو إداري")
             d_name = st.text_input("الاسم الكامل")
             d_email = st.text_input("البريد الإلكتروني المهني")
             d_phone = st.text_input("رقم الهاتف", placeholder="06XXXXXXXX")
@@ -432,7 +425,7 @@ else:
                         c.execute("INSERT INTO users (username, password, full_name, role, custom_title, status, phone, email, must_change_password) VALUES (?, ?, ?, ?, ?, 'active', ?, ?, 1)",
                                   (d_email, d_pass, d_name, d_role, d_custom_title, d_phone, d_email))
                         conn.commit()
-                        st.success("تم الحفظ بنجاح وتفعيل حماية 2FA!")
+                        st.success("تم الحفظ بنجاح!")
                     except Exception as e:
                         st.error(f"خطأ: {e}")
                 else:
@@ -508,27 +501,26 @@ else:
             st.dataframe(pd.read_sql_query("SELECT class_name as 'اسم القسم', level as 'المستوى', branch as 'الشعبة' FROM classes", conn), use_container_width=True)
 
         with dev_tabs[4]:
-            st.subheader("🔑 لوحة تغيير كلمة المرور السرية للمطور الرئيسي")
+            st.subheader("🔑 لوحة تغيير كلمة المرور للمطور")
             new_p1 = st.text_input("كلمة المرور الجديدة", type="password")
             new_p2 = st.text_input("تأكيد كلمة المرور الجديدة", type="password")
-            if st.button("تحديث وحفظ كلمة المرور السرية الجديدة", type="primary"):
+            if st.button("تحديث كلمة المرور", type="primary"):
                 if new_p1 and new_p1 == new_p2:
                     c = conn.cursor()
                     c.execute("UPDATE users SET password = ? WHERE role = 'developer'", (new_p1,))
                     conn.commit()
-                    st.success("🎉 تمت بنجاح عملية تحديث كلمة مرور المطور وأصبحت مؤمنة تماماً!")
+                    st.success("🎉 تم تحديث كلمة المرور بنجاح!")
                 else:
                     st.error("كلمتا المرور غير متطابقتين أو فارغتان.")
         conn.close()
 
     elif role in ['admin', 'supervisor']:
         st.title(f"📋 لوحة قيادة {'السيد المدير' if role == 'admin' else 'الحارس العام'}")
-        # باقي واجهات الإدارة...
         st.info("لوحة القيادة الإدارية جاهزة.")
 
     elif role == 'teacher':
         st.title(f"👨‍🏫 بوابة الأستاذ(ة): {st.session_state.user['full_name']}")
-        st.info("بوابة الأستاذ جاهزة لتسجيل الغياب.")
+        st.info("بوابة الأستاذ جاهزة.")
 
     elif role == 'parent':
         std = st.session_state.active_parent_student
