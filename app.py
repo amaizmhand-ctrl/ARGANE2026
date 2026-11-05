@@ -48,14 +48,21 @@ st.markdown("""
         font-family: 'Tajawal', sans-serif !important;
         direction: rtl;
         text-align: right;
-        color: #0f172a !important; /* لون خط داكن وواضح جداً لجميع النصوص */
     }
     
     .stApp {
         background-color: #f8fafc;
     }
     
-    /* ضمان وضوح النصوص داخل الأزرار والعناصر */
+    /* جعل نصوص البطاقات والإشعارات الداكنة بيضاء وناصعة 100% */
+    div[style*="background: linear-gradient"], div[style*="background: #0f172a"], div[style*="background: #1e293b"] {
+        color: #ffffff !important;
+    }
+    
+    div[style*="background: linear-gradient"] *, div[style*="background: #0f172a"] *, div[style*="background: #1e293b"] * {
+        color: #ffffff !important;
+    }
+
     .stButton>button {
         border-radius: 10px;
         font-weight: 700;
@@ -71,7 +78,6 @@ st.markdown("""
         transform: translateY(-1px);
     }
 
-    /* تنسيق الشريط الجانبي ليكون الخط فيه ناصع البياض وواضح */
     section[data-testid="stSidebar"] {
         background-color: #0f172a !important;
     }
