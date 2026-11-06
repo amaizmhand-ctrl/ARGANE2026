@@ -906,7 +906,7 @@ else:
             
         st.divider()
 
-                today_date_str = date.today().strftime('%Y-%m-%d') + '%'
+        today_date_str = date.today().strftime('%Y-%m-%d') + '%'
         permits_in_cls = pd.read_sql_query("""
             SELECT s.full_name, p.reason, p.timestamp 
             FROM entry_permits p JOIN students s ON p.student_id = s.id 
