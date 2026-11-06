@@ -906,12 +906,13 @@ else:
             
         st.divider()
 
+                today_date_str = date.today().strftime('%Y-%m-%d') + '%'
         permits_in_cls = pd.read_sql_query("""
             SELECT s.full_name, p.reason, p.timestamp 
             FROM entry_permits p JOIN students s ON p.student_id = s.id 
             WHERE s.class_name = ? AND p.timestamp LIKE ?
-        """, conn, params=(sel_cls, f"{date.today().strftime('%Y-%m-%d')}%"))
-        
+        """, conn, params=(sel_cls, today_date_str))
+
         if not permits_in_cls.empty:
             st.info("🎟️ **تلاميذ حصلوا على ترخيص دخول من الحراسة العامة لهذه الحصة:**")
             for _, pm in permits_in_cls.iterrows():
